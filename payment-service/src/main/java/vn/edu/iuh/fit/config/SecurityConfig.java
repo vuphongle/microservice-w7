@@ -5,55 +5,37 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.session.SessionRegistryImpl;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 @EnableMethodSecurity
 @Slf4j
+@EnableRetry
 public class SecurityConfig {
 
     @Bean
-    protected SessionAuthenticationStrategy sessionAuthenticationStrategy() {
-        return new RegisterSessionAuthenticationStrategy(new SessionRegistryImpl());
-    }
-
-    @Bean
-    public SecurityFilterChain filterChain(
-            final HttpSecurity httpSecurity
-    ) throws Exception {
-
+    public SecurityFilterChain filterChain(final HttpSecurity httpSecurity) throws Exception {
         log.debug("Configuring Security Filter Chain");
 
         httpSecurity
                 .exceptionHandling(customizer ->
-                        customizer.authenticationEntryPoint((request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(customizer -> customizer
-                        .requestMatchers("/payments/**").permitAll()
-                        .anyRequest().authenticated()
+                        customizer.authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
+                .authorizeHttpRequests(customizer ->
+                        customizer
+                                .anyRequest().permitAll()  // Cho phép tất cả các yêu cầu mà không cần xác thực
                 )
-                .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // Stateless
 
-        log.debug("CustomBearerTokenAuthenticationFilter added to the filter chain");
+        log.debug("Security Filter Chain configured successfully");
 
         return httpSecurity.build();
     }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
 }
