@@ -16,6 +16,8 @@ public class GatewayConfig {
         return builder.routes()
                 .route("payment-service", r -> r.path("/payments/**")
                         .uri("lb://payment-service"))
+                .route("inventory-service", r -> r.path("/inventory/**")
+                        .uri("lb://inventory-service"))
                 .build();
     }
 
