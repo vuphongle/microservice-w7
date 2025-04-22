@@ -63,4 +63,13 @@ public class PaymentController {
     public String circuitBreakerFallback(Exception e) {
         return "Service is currently unavailable, please try again later.";
     }
+
+    @GetMapping("/time-limiter")
+    @RateLimiter(name = "apiRateLimiter", fallbackMethod = "timeLimiterFallback")
+    public String getTimeLimitedPaymentStatus() {
+        // Call the inventory service to check its status
+        String inventoryStatus = inventoryServiceClient.getInventoryStatus();
+
+        return inventoryStatus + " - Payment service is running!";
+    }
 }
