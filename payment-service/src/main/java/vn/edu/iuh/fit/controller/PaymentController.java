@@ -49,4 +49,18 @@ public class PaymentController {
     public String rateLimiterFallback(Exception e) {
         return "Too many requests, please try again later.";
     }
+
+    // Circuit Breaker
+    @GetMapping("/circuit-breaker")
+    @RateLimiter(name = "apiRateLimiter", fallbackMethod = "circuitBreakerFallback")
+    public String getCircuitBreakerPaymentStatus() {
+        // Call the inventory service to check its status
+        String inventoryStatus = inventoryServiceClient.getInventoryStatus();
+
+        return inventoryStatus + " - Payment service is running!";
+    }
+
+    public String circuitBreakerFallback(Exception e) {
+        return "Service is currently unavailable, please try again later.";
+    }
 }
