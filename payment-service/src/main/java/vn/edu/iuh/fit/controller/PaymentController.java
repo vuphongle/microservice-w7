@@ -1,5 +1,6 @@
 package vn.edu.iuh.fit.controller;
 
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
@@ -33,5 +34,19 @@ public class PaymentController {
     @Recover
     public String fallbackPaymentStatus(Exception e) {
         return "Inventory service is down, please try again later!";
+    }
+
+    //Rate Limiter
+    @GetMapping("/rate-limiter")
+    @RateLimiter(name = "apiRateLimiter", fallbackMethod = "rateLimiterFallback")
+    public String getRateLimitedPaymentStatus() {
+        // Call the inventory service to check its status
+        String inventoryStatus = inventoryServiceClient.getInventoryStatus();
+
+        return inventoryStatus + " - Payment service is running!";
+    }
+
+    public String rateLimiterFallback(Exception e) {
+        return "Too many requests, please try again later.";
     }
 }
